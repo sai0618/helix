@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Helix User Portal{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Helix</p>
+        <h1>User Registration</h1>
+      </div>
+      <nav>
+        {% if session.get("authenticated") %}
+          <a href="{{ url_for('list_users') }}">Users</a>
+          <a class="button" href="{{ url_for('add_user') }}">Add User</a>
+          <form action="{{ url_for('logout') }}" method="post">
+            <button class="link" type="submit">Logout</button>
+          </form>
+        {% endif %}
+      </nav>
+    </header>
+
+    <main class="page">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <section class="messages">
+            {% for category, message in messages %}
+              <div class="message {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </section>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

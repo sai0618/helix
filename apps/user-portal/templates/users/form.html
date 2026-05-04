@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% set is_edit = mode == "edit" %}
+{% block title %}{{ "Edit" if is_edit else "Add" }} User | Helix User Portal{% endblock %}
+
+{% block content %}
+<section class="section-header">
+  <div>
+    <h2>{{ "Edit User" if is_edit else "Add New User" }}</h2>
+    <p>{{ "Update an existing registration." if is_edit else "Create a new user registration." }}</p>
+  </div>
+</section>
+
+<form class="form-card" method="post">
+  <label>
+    Username
+    <input name="username" value="{{ user.username or '' }}" required maxlength="80">
+  </label>
+
+  <label>
+    {{ "New password" if is_edit else "Password" }}
+    <input type="password" name="password" {% if not is_edit %}required{% endif %} maxlength="255">
+  </label>
+
+  <label>
+    First name
+    <input name="first_name" value="{{ user.first_name or '' }}" required maxlength="80">
+  </label>
+
+  <label>
+    Last name
+    <input name="last_name" value="{{ user.last_name or '' }}" required maxlength="80">
+  </label>
+
+  <label>
+    Email
+    <input type="email" name="email" value="{{ user.email or '' }}" required maxlength="255">
+  </label>
+
+  <label>
+    Role
+    <input name="role" value="{{ user.role or 'user' }}" required maxlength="80">
+  </label>
+
+  <label class="checkbox">
+    <input type="checkbox" name="active" {% if user.active is not defined or user.active %}checked{% endif %}>
+    Active
+  </label>
+
+  <div class="form-actions">
+    <a href="{{ url_for('list_users') }}">Cancel</a>
+    <button class="button" type="submit">{{ "Save Changes" if is_edit else "Create User" }}</button>
+  </div>
+</form>
+{% endblock %}

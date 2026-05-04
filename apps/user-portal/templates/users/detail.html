@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.first_name }} {{ user.last_name }} | Helix User Portal{% endblock %}
+
+{% block content %}
+<section class="section-header">
+  <div>
+    <h2>{{ user.first_name }} {{ user.last_name }}</h2>
+    <p>{{ user.email }}</p>
+  </div>
+  <div class="button-row">
+    <a href="{{ url_for('edit_user', user_id=user.id) }}">Edit</a>
+    <a class="button" href="{{ url_for('list_users') }}">Back to Users</a>
+  </div>
+</section>
+
+<section class="detail-card">
+  <dl>
+    <div>
+      <dt>User ID</dt>
+      <dd>{{ user.id }}</dd>
+    </div>
+    <div>
+      <dt>Username</dt>
+      <dd>{{ user.username }}</dd>
+    </div>
+    <div>
+      <dt>Role</dt>
+      <dd>{{ user.role }}</dd>
+    </div>
+    <div>
+      <dt>Status</dt>
+      <dd>{{ "Active" if user.active else "Inactive" }}</dd>
+    </div>
+    <div>
+      <dt>Created</dt>
+      <dd>{{ user.created_at or "Unknown" }}</dd>
+    </div>
+    <div>
+      <dt>Updated</dt>
+      <dd>{{ user.updated_at or "Unknown" }}</dd>
+    </div>
+  </dl>
+</section>
+{% endblock %}

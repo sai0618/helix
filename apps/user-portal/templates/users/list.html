@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Users | Helix User Portal{% endblock %}
+
+{% block content %}
+<section class="section-header">
+  <div>
+    <h2>Users</h2>
+    <p>Registered users from MySQL.</p>
+  </div>
+  <a class="button" href="{{ url_for('add_user') }}">Add New User</a>
+</section>
+
+{% if users %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th class="actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+          <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.first_name }} {{ user.last_name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+              <span class="status {{ 'active' if user.active else 'inactive' }}">
+                {{ 'Active' if user.active else 'Inactive' }}
+              </span>
+            </td>
+            <td class="actions">
+              <a href="{{ url_for('view_user', user_id=user.id) }}">View</a>
+              <a href="{{ url_for('edit_user', user_id=user.id) }}">Edit</a>
+              <form method="post" action="{{ url_for('delete_user', user_id=user.id) }}">
+                <button class="link danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <section class="empty-state">
+    <h3>No users found</h3>
+    <p>Add a user or initialize MySQL with the `user-data` SQL files.</p>
+    <a class="button" href="{{ url_for('add_user') }}">Add New User</a>
+  </section>
+{% endif %}
+{% endblock %}
