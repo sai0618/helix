@@ -1,0 +1,11 @@
+{{- if and .Values.externalIngress.enabled .Values.externalIngress.managedCertificateName }}
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: {{ .Values.externalIngress.managedCertificateName }}
+  labels:
+    {{- include "user-portal.labels" . | nindent 4 }}
+spec:
+  domains:
+    - {{ .Values.externalIngress.host | quote }}
+{{- end }}

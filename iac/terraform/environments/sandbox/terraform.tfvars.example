@@ -1,0 +1,89 @@
+project_id = "playground-s-xx-xxxxxxxx"
+
+# Optional overrides
+# environment = "sandbox"
+# name_prefix = "helix"
+# primary_region = "us-central1"
+# secondary_region = "us-east1"
+# primary_zone = "us-central1-a"
+# secondary_zone = "us-east1-b"
+
+# Keep empty unless you need restricted admin access from a known CIDR.
+# admin_source_ranges = ["203.0.113.10/32"]
+
+# Google Cloud Sandbox projects commonly allow service account creation but deny project IAM policy updates.
+# Keep this false unless your account has resourcemanager.projects.setIamPolicy.
+create_project_iam_bindings = false
+
+# Keep false while validating networking-only phases. Set true when ready to
+# create the primary and secondary GKE clusters.
+enable_gke_clusters = false
+
+# Optional. Leave empty to use the default Compute Engine service account for
+# GKE nodes. This avoids project-level IAM binding failures in Google Cloud Sandbox.
+# gke_node_service_account_email = ""
+
+# Enables logging.googleapis.com, monitoring.googleapis.com, and GKE log/metric
+# collection when clusters are created.
+enable_cloud_logging      = true
+enable_cloud_monitoring   = true
+enable_bigquery_log_sinks = false
+enable_secret_manager_csi = true
+
+# BigQuery log export settings.
+# Set enable_bigquery_log_sinks = true to create datasets and sinks for:
+# - user portal JSON application logs
+# - GKE control plane logs
+# - GKE node logs
+log_export_dataset_location       = "US"
+delete_log_export_data_on_destroy = false
+# Optional. Grant read/query access to the exported log datasets.
+# Grant dataset read access to the active sandbox user and the Compute Engine
+# default service account used by Grafana Cloud's BigQuery service account key.
+# Replace PROJECT_NUMBER and cloud_user email for each Google Cloud Sandbox project.
+# log_export_viewer_members = [
+#   "user:cloud_user@example.com",
+#   "serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com"
+# ]
+
+# Optional enterprise traffic stack. These features require GKE Fleet APIs and
+# can take several minutes to converge in GCP.
+enable_fleet_registration    = false
+enable_cloud_service_mesh    = false
+enable_multi_cluster_ingress = false
+enable_ingress_foundation    = false
+
+# Optional Cloud SQL MySQL database for the user registration app.
+# Keep disabled until you are ready to provision a paid managed database.
+enable_cloud_sql             = false
+cloud_sql_database_password  = "replace-with-a-strong-password"
+enable_cloud_sql_import      = false
+
+# Optional Secret Manager secrets consumed by the user-portal Helm chart through
+# the GKE Secret Manager CSI driver.
+enable_secret_manager_secrets = false
+app_login_username            = "admin"
+app_login_password            = "replace-with-an-app-login-password"
+# app_login_password_hash     = "scrypt:..."
+
+mysql_credentials_username = "helix_app"
+mysql_credentials_password = "replace-with-a-mysql-password"
+mysql_credentials_database = "helix_users"
+mysql_credentials_host     = "helix-mysql"
+mysql_credentials_port     = "3306"
+
+# Optional. Grant Secret Manager access to the GKE Kubernetes service account
+# and to the Google service account it impersonates for Cloud Trace export.
+# secret_accessor_members = [
+#   "principal://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/PROJECT_ID.svc.id.goog/subject/ns/helix/sa/helix-user-portal",
+#   "serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com"
+# ]
+
+# Optional project-level IAM persona members. These only apply when
+# create_project_iam_bindings = true.
+# project_iam_principals = {
+#   dev  = ["group:gcp-dev@example.com"]
+#   ops  = ["group:gcp-ops@example.com"]
+#   sre  = ["group:gcp-sre@example.com"]
+#   cicd = ["serviceAccount:github-actions@example-project.iam.gserviceaccount.com"]
+# }

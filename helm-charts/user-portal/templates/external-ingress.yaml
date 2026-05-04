@@ -1,0 +1,28 @@
+{{- if .Values.externalIngress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "user-portal.fullname" . }}-external
+  labels:
+    {{- include "user-portal.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: gce
+    {{- if .Values.externalIngress.staticIpName }}
+    kubernetes.io/ingress.global-static-ip-name: {{ .Values.externalIngress.staticIpName | quote }}
+    {{- end }}
+    {{- if .Values.externalIngress.managedCertificateName }}
+    networking.gke.io/managed-certificates: {{ .Values.externalIngress.managedCertificateName | quote }}
+    {{- end }}
+spec:
+  rules:
+    - host: {{ .Values.externalIngress.host | quote }}
+      http:
+        paths:
+          - path: {{ .Values.externalIngress.path | quote }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "user-portal.fullname" . }}
+                port:
+                  name: http
+{{- end }}

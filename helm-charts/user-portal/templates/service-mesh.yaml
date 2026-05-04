@@ -1,0 +1,61 @@
+{{- if .Values.serviceMesh.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: {{ include "user-portal.fullname" . }}
+  labels:
+    {{- include "user-portal.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "user-portal.selectorLabels" . | nindent 6 }}
+  mtls:
+    mode: {{ .Values.serviceMesh.mtlsMode }}
+{{- if .Values.serviceMesh.destinationRule.enabled }}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "user-portal.fullname" . }}
+  labels:
+    {{- include "user-portal.labels" . | nindent 4 }}
+spec:
+  host: {{ include "user-portal.fullname" . }}
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+    - name: stable
+      labels:
+        app.kubernetes.io/version: stable
+    - name: canary
+      labels:
+        app.kubernetes.io/version: canary
+{{- end }}
+{{- if .Values.serviceMesh.virtualService.enabled }}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "user-portal.fullname" . }}
+  labels:
+    {{- include "user-portal.labels" . | nindent 4 }}
+spec:
+  hosts:
+    - {{ include "user-portal.fullname" . }}
+  http:
+    - route:
+        - destination:
+            host: {{ include "user-portal.fullname" . }}
+            subset: stable
+            port:
+              number: {{ .Values.service.port }}
+          weight: {{ .Values.serviceMesh.virtualService.stableWeight }}
+        - destination:
+            host: {{ include "user-portal.fullname" . }}
+            subset: canary
+            port:
+              number: {{ .Values.service.port }}
+          weight: {{ .Values.serviceMesh.virtualService.canaryWeight }}
+{{- end }}
+{{- end }}

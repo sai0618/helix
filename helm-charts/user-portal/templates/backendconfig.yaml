@@ -1,0 +1,17 @@
+{{- if .Values.backendConfig.enabled }}
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: {{ .Values.backendConfig.name }}
+  labels:
+    {{- include "user-portal.labels" . | nindent 4 }}
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    timeoutSec: 5
+    healthyThreshold: 1
+    unhealthyThreshold: 2
+    type: {{ .Values.backendConfig.healthCheck.type }}
+    requestPath: {{ .Values.backendConfig.healthCheck.requestPath }}
+    port: {{ .Values.backendConfig.healthCheck.port }}
+{{- end }}

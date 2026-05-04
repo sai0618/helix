@@ -1,0 +1,132 @@
+replicaCount: 2
+
+deploymentStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 1
+
+image:
+  repository: us-central1-docker.pkg.dev/PROJECT_ID/helix-sandbox-docker/user-portal
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+version: stable
+environment: sandbox
+
+tracing:
+  enabled: true
+  projectId: ""
+  sampleRate: "1.0"
+
+service:
+  type: ClusterIP
+  port: 8080
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"default":"user-portal-backend"}'
+
+backendConfig:
+  enabled: true
+  name: user-portal-backend
+  healthCheck:
+    requestPath: /healthz
+    port: 8080
+    type: HTTP
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: user-portal.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+externalIngress:
+  enabled: false
+  staticIpName: ""
+  managedCertificateName: ""
+  host: user-portal.example.com
+  path: /
+
+internalIngress:
+  enabled: false
+  staticIpName: ""
+  host: user-portal.internal.example.com
+  path: /
+
+multiClusterIngress:
+  enabled: false
+  staticIpAddress: ""
+  host: user-portal.example.com
+  path: /
+  serviceName: user-portal
+  backendConfigName: ""
+  clusters: []
+
+serviceMesh:
+  enabled: false
+  mtlsMode: STRICT
+  destinationRule:
+    enabled: true
+  virtualService:
+    enabled: true
+    stableWeight: 100
+    canaryWeight: 0
+
+config:
+  flaskSecretKey: change-me
+  mysqlHost: helix-mysql
+  mysqlPort: "3306"
+  mysqlDatabase: helix_users
+  mysqlUser: helix_app
+  mysqlPassword: helix-dev-password
+  existingSecret: ""
+  mysqlPasswordKey: mysql-password
+
+appLogin:
+  username: admin
+  password: ChangeMe123!
+  passwordHash: ""
+
+secretManager:
+  enabled: false
+  providerClassName: ""
+  projectId: ""
+  mountPath: /var/secrets/helix
+  appLoginSecretName: helix-sandbox-app-login-credentials
+  appLoginFileName: app-login-credentials.json
+  mysqlSecretName: helix-sandbox-mysql-credentials
+  mysqlFileName: mysql-credentials.json
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

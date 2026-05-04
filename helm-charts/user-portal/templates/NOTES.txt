@@ -1,0 +1,10 @@
+User Portal has been installed.
+
+Service:
+  {{ include "user-portal.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+
+Health check:
+  /healthz
+
+API:
+  /api/users

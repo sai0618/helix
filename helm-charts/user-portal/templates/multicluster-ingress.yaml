@@ -1,0 +1,48 @@
+{{- if .Values.multiClusterIngress.enabled }}
+apiVersion: networking.gke.io/v1
+kind: MultiClusterService
+metadata:
+  name: {{ .Values.multiClusterIngress.serviceName }}
+  labels:
+    {{- include "user-portal.labels" . | nindent 4 }}
+  {{- if .Values.multiClusterIngress.backendConfigName }}
+  annotations:
+    beta.cloud.google.com/backend-config: '{"ports":{"{{ .Values.service.port }}":"{{ .Values.multiClusterIngress.backendConfigName }}"}}'
+  {{- end }}
+spec:
+  template:
+    spec:
+      selector:
+        {{- include "user-portal.selectorLabels" . | nindent 8 }}
+      ports:
+        - name: http
+          protocol: TCP
+          port: {{ .Values.service.port }}
+          targetPort: 8080
+  {{- if .Values.multiClusterIngress.clusters }}
+  clusters:
+    {{- toYaml .Values.multiClusterIngress.clusters | nindent 4 }}
+  {{- end }}
+---
+apiVersion: networking.gke.io/v1
+kind: MultiClusterIngress
+metadata:
+  name: {{ include "user-portal.fullname" . }}
+  labels:
+    {{- include "user-portal.labels" . | nindent 4 }}
+  {{- if .Values.multiClusterIngress.staticIpAddress }}
+  annotations:
+    networking.gke.io/static-ip: {{ .Values.multiClusterIngress.staticIpAddress | quote }}
+  {{- end }}
+spec:
+  template:
+    spec:
+      rules:
+        - host: {{ .Values.multiClusterIngress.host | quote }}
+          http:
+            paths:
+              - path: {{ .Values.multiClusterIngress.path | quote }}
+                backend:
+                  serviceName: {{ .Values.multiClusterIngress.serviceName }}
+                  servicePort: {{ .Values.service.port }}
+{{- end }}

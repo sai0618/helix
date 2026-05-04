@@ -1,0 +1,6 @@
+apiVersion: v2
+name: user-portal
+description: Merged UI and REST API for the Helix user registration application
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

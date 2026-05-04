@@ -1,0 +1,670 @@
+{
+  "annotations": [
+    {
+      "kind": "AnnotationQuery",
+      "spec": {
+        "builtIn": true,
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "query": {
+          "datasource": {
+            "name": "-- Grafana --"
+          },
+          "group": "grafana",
+          "kind": "DataQuery",
+          "spec": {},
+          "version": "v0"
+        }
+      }
+    }
+  ],
+  "cursorSync": "Tooltip",
+  "description": "Helix user-portal dashboard using BigQuery application logs and Google Cloud Monitoring GKE workload metrics.",
+  "editable": true,
+  "elements": {
+    "traffic-by-url": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${DS_BIGQUERY}"
+                    },
+                    "group": "grafana-bigquery-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "format": "table",
+                      "location": "US",
+                      "project": "${project_id}",
+                      "rawSql": "WITH requests AS (\n  SELECT\n    TIMESTAMP_TRUNC(timestamp, MINUTE) AS time,\n    CASE\n      WHEN jsonPayload.http_request.request_path = '/users'\n        OR REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/?$') THEN 'view-users'\n      WHEN jsonPayload.http_request.request_path = '/users/new'\n        OR (REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/?$') AND jsonPayload.http_request.request_method = 'POST') THEN 'create-users'\n      WHEN REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/users/[^/]+/edit$')\n        OR (REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/[^/]+$') AND jsonPayload.http_request.request_method IN ('PUT', 'PATCH')) THEN 'edit-users'\n      WHEN REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/users/[^/]+/delete$')\n        OR (REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/[^/]+$') AND jsonPayload.http_request.request_method = 'DELETE') THEN 'delete-users'\n      ELSE NULL\n    END AS url_group\n  FROM `${project_id}.${app_log_dataset}.stdout`\n  WHERE $__timeFilter(timestamp)\n    AND jsonPayload.service = 'user-portal'\n    AND jsonPayload.event_type = 'http_request'\n)\nSELECT\n  time,\n  SUM(IF(url_group = 'view-users', 1, 0)) AS `view-users`,\n  SUM(IF(url_group = 'create-users', 1, 0)) AS `create-users`,\n  SUM(IF(url_group = 'edit-users', 1, 0)) AS `edit-users`,\n  SUM(IF(url_group = 'delete-users', 1, 0)) AS `delete-users`\nFROM requests\nWHERE url_group IS NOT NULL\nGROUP BY time\nORDER BY time"
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "Request volume grouped by user workflow URL.",
+        "id": 1,
+        "links": [],
+        "title": "Traffic By URL",
+        "vizConfig": {
+          "group": "timeseries",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "lineInterpolation": "linear",
+                  "lineWidth": 2,
+                  "showPoints": "never",
+                  "spanNulls": true
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    }
+                  ]
+                },
+                "unit": "short"
+              },
+              "overrides": []
+            },
+            "options": {
+              "legend": {
+                "calcs": [
+                  "lastNotNull",
+                  "max"
+                ],
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true
+              },
+              "tooltip": {
+                "mode": "multi",
+                "sort": "desc"
+              }
+            }
+          },
+          "version": "12.4.0"
+        }
+      }
+    },
+    "errors-by-url": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${DS_BIGQUERY}"
+                    },
+                    "group": "grafana-bigquery-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "format": "table",
+                      "location": "US",
+                      "project": "${project_id}",
+                      "rawSql": "WITH requests AS (\n  SELECT\n    TIMESTAMP_TRUNC(timestamp, MINUTE) AS time,\n    CASE\n      WHEN jsonPayload.http_request.request_path = '/users'\n        OR REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/?$') THEN 'view-users'\n      WHEN jsonPayload.http_request.request_path = '/users/new'\n        OR (REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/?$') AND jsonPayload.http_request.request_method = 'POST') THEN 'create-users'\n      WHEN REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/users/[^/]+/edit$')\n        OR (REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/[^/]+$') AND jsonPayload.http_request.request_method IN ('PUT', 'PATCH')) THEN 'edit-users'\n      WHEN REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/users/[^/]+/delete$')\n        OR (REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/[^/]+$') AND jsonPayload.http_request.request_method = 'DELETE') THEN 'delete-users'\n      ELSE NULL\n    END AS url_group,\n    CAST(SAFE_CAST(jsonPayload.http_request.status AS FLOAT64) AS INT64) AS status_code\n  FROM `${project_id}.${app_log_dataset}.stdout`\n  WHERE $__timeFilter(timestamp)\n    AND jsonPayload.service = 'user-portal'\n    AND jsonPayload.event_type = 'http_request'\n)\nSELECT\n  time,\n  SUM(IF(url_group = 'view-users' AND status_code >= 400, 1, 0)) AS `view-users`,\n  SUM(IF(url_group = 'create-users' AND status_code >= 400, 1, 0)) AS `create-users`,\n  SUM(IF(url_group = 'edit-users' AND status_code >= 400, 1, 0)) AS `edit-users`,\n  SUM(IF(url_group = 'delete-users' AND status_code >= 400, 1, 0)) AS `delete-users`\nFROM requests\nWHERE url_group IS NOT NULL\nGROUP BY time\nORDER BY time"
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "HTTP 4xx and 5xx responses grouped by user workflow URL.",
+        "id": 2,
+        "links": [],
+        "title": "Errors By URL",
+        "vizConfig": {
+          "group": "timeseries",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "drawStyle": "bars",
+                  "fillOpacity": 28,
+                  "lineInterpolation": "linear",
+                  "lineWidth": 2,
+                  "showPoints": "never",
+                  "spanNulls": true
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    },
+                    {
+                      "color": "red",
+                      "value": 5
+                    }
+                  ]
+                },
+                "unit": "short"
+              },
+              "overrides": []
+            },
+            "options": {
+              "legend": {
+                "calcs": [
+                  "lastNotNull",
+                  "max"
+                ],
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true
+              },
+              "tooltip": {
+                "mode": "multi",
+                "sort": "desc"
+              }
+            }
+          },
+          "version": "12.4.0"
+        }
+      }
+    },
+    "latency-by-url": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${DS_BIGQUERY}"
+                    },
+                    "group": "grafana-bigquery-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "format": "table",
+                      "location": "US",
+                      "project": "${project_id}",
+                      "rawSql": "WITH samples AS (\n  SELECT\n    TIMESTAMP_TRUNC(timestamp, MINUTE) AS time,\n    CASE\n      WHEN jsonPayload.http_request.request_path = '/users'\n        OR REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/?$') THEN 'view-users'\n      WHEN jsonPayload.http_request.request_path = '/users/new'\n        OR (REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/?$') AND jsonPayload.http_request.request_method = 'POST') THEN 'create-users'\n      WHEN REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/users/[^/]+/edit$')\n        OR (REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/[^/]+$') AND jsonPayload.http_request.request_method IN ('PUT', 'PATCH')) THEN 'edit-users'\n      WHEN REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/users/[^/]+/delete$')\n        OR (REGEXP_CONTAINS(jsonPayload.http_request.request_path, r'^/api/users/[^/]+$') AND jsonPayload.http_request.request_method = 'DELETE') THEN 'delete-users'\n      ELSE NULL\n    END AS url_group,\n    SAFE_CAST(jsonPayload.http_request.latency_ms AS FLOAT64) AS latency_ms\n  FROM `${project_id}.${app_log_dataset}.stdout`\n  WHERE $__timeFilter(timestamp)\n    AND jsonPayload.service = 'user-portal'\n    AND jsonPayload.event_type = 'http_request'\n    AND jsonPayload.http_request.latency_ms IS NOT NULL\n), grouped AS (\n  SELECT\n    time,\n    url_group,\n    APPROX_QUANTILES(latency_ms, 100)[OFFSET(95)] AS p95_latency_ms\n  FROM samples\n  WHERE url_group IS NOT NULL\n    AND latency_ms IS NOT NULL\n  GROUP BY time, url_group\n)\nSELECT\n  time,\n  MAX(IF(url_group = 'view-users', p95_latency_ms, NULL)) AS `view-users`,\n  MAX(IF(url_group = 'create-users', p95_latency_ms, NULL)) AS `create-users`,\n  MAX(IF(url_group = 'edit-users', p95_latency_ms, NULL)) AS `edit-users`,\n  MAX(IF(url_group = 'delete-users', p95_latency_ms, NULL)) AS `delete-users`\nFROM grouped\nGROUP BY time\nORDER BY time"
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "p95 request latency grouped by user workflow URL.",
+        "id": 3,
+        "links": [],
+        "title": "Latency By URL",
+        "vizConfig": {
+          "group": "timeseries",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "lineInterpolation": "linear",
+                  "lineWidth": 2,
+                  "showPoints": "never",
+                  "spanNulls": true
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "orange",
+                      "value": 500
+                    },
+                    {
+                      "color": "red",
+                      "value": 1000
+                    }
+                  ]
+                },
+                "unit": "ms"
+              },
+              "overrides": []
+            },
+            "options": {
+              "legend": {
+                "calcs": [
+                  "lastNotNull",
+                  "max"
+                ],
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true
+              },
+              "tooltip": {
+                "mode": "multi",
+                "sort": "desc"
+              }
+            }
+          },
+          "version": "12.4.0"
+        }
+      }
+    },
+    "user-portal-cpu-utilization": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${DS_CLOUD_MONITORING}"
+                    },
+                    "group": "stackdriver",
+                    "kind": "DataQuery",
+	                    "spec": {
+	                      "queryType": "promQL",
+	                      "timeSeriesList": {
+	                        "promQLQuery": {
+	                          "projectName": "${project_id}",
+	                          "expr": "sum by (container_name) (rate({\"__name__\"=\"kubernetes.io/container/cpu/core_usage_time\", \"monitored_resource\"=\"k8s_container\", \"project_id\"=\"${project_id}\", \"namespace_name\"=\"helix\", \"container_name\"=\"user-portal\"}[5m]))",
+	                          "step": "60s"
+	                        },
+	                        "projectName": "${project_id}",
+	                        "filters": [],
+	                        "view": "FULL",
+	                        "groupBys": []
+	                      },
+	                      "promQLQuery": {
+	                        "projectName": "${project_id}",
+	                        "expr": "sum by (container_name) (rate({\"__name__\"=\"kubernetes.io/container/cpu/core_usage_time\", \"monitored_resource\"=\"k8s_container\", \"project_id\"=\"${project_id}\", \"namespace_name\"=\"helix\", \"container_name\"=\"user-portal\"}[5m]))",
+	                        "step": "60s"
+	                      }
+	                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "CPU core usage rate for the user-portal container in the helix namespace.",
+        "id": 4,
+        "links": [],
+        "title": "User Portal CPU Usage",
+        "vizConfig": {
+          "group": "timeseries",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "lineInterpolation": "linear",
+                  "lineWidth": 2,
+                  "showPoints": "never",
+                  "spanNulls": true
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    }
+                  ]
+                },
+                "unit": "cores"
+              },
+              "overrides": []
+            },
+            "options": {
+              "legend": {
+                "calcs": [
+                  "lastNotNull",
+                  "max"
+                ],
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true
+              },
+              "tooltip": {
+                "mode": "multi",
+                "sort": "desc"
+              }
+            }
+          },
+          "version": "12.4.0"
+        }
+      }
+    },
+    "user-portal-memory-utilization": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${DS_CLOUD_MONITORING}"
+                    },
+                    "group": "stackdriver",
+                    "kind": "DataQuery",
+	                    "spec": {
+	                      "queryType": "promQL",
+	                      "timeSeriesList": {
+	                        "promQLQuery": {
+	                          "projectName": "${project_id}",
+	                          "expr": "avg by (container_name) (avg_over_time({\"__name__\"=\"kubernetes.io/container/memory/used_bytes\", \"monitored_resource\"=\"k8s_container\", \"project_id\"=\"${project_id}\", \"namespace_name\"=\"helix\", \"container_name\"=\"user-portal\"}[5m]))",
+	                          "step": "60s"
+	                        },
+	                        "projectName": "${project_id}",
+	                        "filters": [],
+	                        "view": "FULL",
+	                        "groupBys": []
+	                      },
+	                      "promQLQuery": {
+	                        "projectName": "${project_id}",
+	                        "expr": "avg by (container_name) (avg_over_time({\"__name__\"=\"kubernetes.io/container/memory/used_bytes\", \"monitored_resource\"=\"k8s_container\", \"project_id\"=\"${project_id}\", \"namespace_name\"=\"helix\", \"container_name\"=\"user-portal\"}[5m]))",
+	                        "step": "60s"
+	                      }
+	                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "Memory used bytes for the user-portal container in the helix namespace.",
+        "id": 5,
+        "links": [],
+        "title": "User Portal Memory Usage",
+        "vizConfig": {
+          "group": "timeseries",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "lineInterpolation": "linear",
+                  "lineWidth": 2,
+                  "showPoints": "never",
+                  "spanNulls": true
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    }
+                  ]
+                },
+                "unit": "bytes"
+              },
+              "overrides": []
+            },
+            "options": {
+              "legend": {
+                "calcs": [
+                  "lastNotNull",
+                  "max"
+                ],
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true
+              },
+              "tooltip": {
+                "mode": "multi",
+                "sort": "desc"
+              }
+            }
+          },
+          "version": "12.4.0"
+        }
+      }
+    }
+  },
+  "layout": {
+    "kind": "GridLayout",
+    "spec": {
+      "items": [
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "traffic-by-url"
+            },
+            "height": 8,
+            "width": 24,
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "errors-by-url"
+            },
+            "height": 8,
+            "width": 12,
+            "x": 0,
+            "y": 8
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "latency-by-url"
+            },
+            "height": 8,
+            "width": 12,
+            "x": 12,
+            "y": 8
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "user-portal-cpu-utilization"
+            },
+            "height": 8,
+            "width": 12,
+            "x": 0,
+            "y": 16
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "user-portal-memory-utilization"
+            },
+            "height": 8,
+            "width": 12,
+            "x": 12,
+            "y": 16
+          }
+        }
+      ]
+    }
+  },
+  "links": [],
+  "liveNow": false,
+  "preload": false,
+  "tags": [
+    "helix",
+    "golden-signals",
+    "bigquery",
+    "cloud-monitoring",
+    "gke"
+  ],
+  "timeSettings": {
+    "autoRefresh": "30s",
+    "autoRefreshIntervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "fiscalYearStartMonth": 0,
+    "from": "now-6h",
+    "hideTimepicker": false,
+    "timezone": "browser",
+    "to": "now"
+  },
+  "title": "Helix User Portal Golden Signals",
+  "variables": [
+    {
+      "kind": "DatasourceVariable",
+      "spec": {
+        "allowCustomValue": false,
+        "current": {
+          "text": "BigQuery",
+          "value": "BigQuery"
+        },
+        "hide": "dontHide",
+        "includeAll": false,
+        "label": "BigQuery",
+        "multi": false,
+        "name": "DS_BIGQUERY",
+        "options": [],
+        "pluginId": "grafana-bigquery-datasource",
+        "refresh": "never",
+        "regex": "",
+        "skipUrlSync": false
+      }
+    },
+    {
+      "kind": "DatasourceVariable",
+      "spec": {
+        "allowCustomValue": false,
+        "current": {
+          "text": "Google Cloud Monitoring",
+          "value": "Google Cloud Monitoring"
+        },
+        "hide": "dontHide",
+        "includeAll": false,
+        "label": "Google Cloud Monitoring",
+        "multi": false,
+        "name": "DS_CLOUD_MONITORING",
+        "options": [],
+        "pluginId": "stackdriver",
+        "refresh": "never",
+        "regex": "",
+        "skipUrlSync": false
+      }
+    },
+    {
+      "kind": "ConstantVariable",
+      "spec": {
+        "allowCustomValue": false,
+        "current": {
+          "text": "PROJECT_ID",
+          "value": "PROJECT_ID"
+        },
+        "hide": "dontHide",
+        "label": "GCP Project",
+        "name": "project_id",
+        "query": "PROJECT_ID",
+        "skipUrlSync": false
+      }
+    },
+    {
+      "kind": "ConstantVariable",
+      "spec": {
+        "allowCustomValue": false,
+        "current": {
+          "text": "helix_sandbox_user_portal_app_logs",
+          "value": "helix_sandbox_user_portal_app_logs"
+        },
+        "hide": "dontHide",
+        "label": "App Log Dataset",
+        "name": "app_log_dataset",
+        "query": "helix_sandbox_user_portal_app_logs",
+        "skipUrlSync": false
+      }
+    }
+  ]
+}

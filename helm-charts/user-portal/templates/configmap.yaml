@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "user-portal.fullname" . }}
+  labels:
+    {{- include "user-portal.labels" . | nindent 4 }}
+data:
+  MYSQL_HOST: {{ .Values.config.mysqlHost | quote }}
+  MYSQL_PORT: {{ .Values.config.mysqlPort | quote }}
+  MYSQL_DATABASE: {{ .Values.config.mysqlDatabase | quote }}
+  MYSQL_USER: {{ .Values.config.mysqlUser | quote }}
+  PORT: {{ .Values.service.port | quote }}
+  {{- if .Values.secretManager.enabled }}
+  APP_LOGIN_CREDENTIALS_FILE: {{ printf "%s/%s" .Values.secretManager.mountPath .Values.secretManager.appLoginFileName | quote }}
+  MYSQL_CREDENTIALS_FILE: {{ printf "%s/%s" .Values.secretManager.mountPath .Values.secretManager.mysqlFileName | quote }}
+  {{- end }}
